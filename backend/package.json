@@ -1,0 +1,24 @@
+{
+  "name": "service-dashboard-backend",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js",
+    "test": "node --test --experimental-sqlite ../tests/",
+    "migrate": "node scripts/migrate.js"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.8.0",
+    "cors": "^2.8.5",
+    "dockerode": "^4.0.3",
+    "express": "^4.21.0",
+    "express-rate-limit": "^7.4.0",
+    "helmet": "^8.0.0",
+    "js-yaml": "^4.1.0",
+    "node-cron": "^3.0.3"
+  },
+  "devDependencies": {}
+}
