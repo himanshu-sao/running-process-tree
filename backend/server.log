@@ -1,0 +1,13 @@
+Server running on http://0.0.0.0:3000
+[scan] Starting scan...
+[scan] Starting background scan loop (interval: 60000ms)
+[scan] Found 15 host listeners
+[scan] Starting HTTP probes...
+[scan] HTTP probes complete: 11/15 responding
+[scan] Scan complete
+[scan] Starting scan...
+[scan] Found 15 host listeners
+[scan] Starting HTTP probes...
+[scan] HTTP probes complete: 11/15 responding
+[scan] Scan complete
+[scan] Stopped background scan loop

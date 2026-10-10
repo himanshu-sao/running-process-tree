@@ -1,0 +1,61 @@
+# Service Dashboard Configuration
+
+# Server settings
+server:
+  port: 3000
+  host: "0.0.0.0"
+
+# Scan settings
+scan:
+  # Interval between background scans in milliseconds
+  interval: 60000
+  # Enable/disable background scan loop
+  enabled: true
+
+# HTTP Probe settings
+probe:
+  # Timeout for HTTP probes in milliseconds
+  timeout: 3000
+  # Maximum concurrent probes
+  concurrency: 10
+  # Default path to probe
+  path: "/"
+  # Probe scheme (http or https)
+  scheme: "http"
+  # TLS certificate verification (set to false ONLY for internal services with self-signed certs)
+  # SECURITY WARNING: Disabling TLS verification exposes to MITM attacks
+  tlsRejectUnauthorized: true
+
+# Docker settings
+docker:
+  # Docker socket path (optional, uses default if not set)
+  socket: ""
+  # Enable/disable Docker discovery
+  enabled: true
+  # Include stopped containers
+  includeStopped: true
+
+# Host discovery settings
+host:
+  # Command to use for host discovery (lsof, ss, netstat)
+  command: "lsof"
+  # Arguments for the command
+  args:
+    - "-iTCP"
+    - "-sTCP:LISTEN"
+    - "-P"
+    - "-n"
+  # Enable/disable host discovery
+  enabled: true
+
+# Logging settings
+logging:
+  level: "info"  # debug, info, warn, error
+  format: "json"  # json, text
+
+# Frontend settings
+frontend:
+  # Enable theme persistence
+  themePersistence: true
+  # Default theme (light, dark, system)
+  defaultTheme: "system"
