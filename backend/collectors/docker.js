@@ -4,10 +4,13 @@
  */
 
 import { spawn } from 'child_process';
+import { getConfig } from '../config.js';
 
 function runDockerCommand(args) {
   return new Promise((resolve, reject) => {
-    const child = spawn('docker', args, {
+    const config = getConfig();
+    const dockerArgs = config.docker.socket ? ['-H', config.docker.socket, ...args] : args;
+    const child = spawn('docker', dockerArgs, {
       stdio: ['ignore', 'pipe', 'pipe']
     });
 
@@ -136,8 +139,10 @@ function parseCreated(createdStr) {
 
 export async function getDockerInfo() {
   try {
-    const versionOutput = await runDockerCommand(['version', '--format', '{{.Server.Version}}']);
-    const infoOutput = await runDockerCommand(['info', '--format', '{{.ContainersRunning}},{{.Containers}},{{.Images}},{{.OperatingSystem}},{{.KernelVersion}}']);
+    const config = getConfig();
+    const dockerArgs = config.docker.socket ? ['-H', config.docker.socket] : [];
+    const versionOutput = await runDockerCommand([...dockerArgs, 'version', '--format', '{{.Server.Version}}']);
+    const infoOutput = await runDockerCommand([...dockerArgs, 'info', '--format', '{{.ContainersRunning}},{{.Containers}},{{.Images}},{{.OperatingSystem}},{{.KernelVersion}}']);
 
     const [containersRunning, containersTotal, images, os, kernel] = infoOutput.split(',');
 

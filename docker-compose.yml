@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  service-dashboard:
+    build: .
+    container_name: service-dashboard
+    ports:
+      - "3000:3000"
+    volumes:
+      # Docker socket for container discovery (read-only)
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      # Optional: persist config
+      - ./config.yaml:/app/config.yaml:ro
+    environment:
+      - NODE_ENV=production
+      - DOCKER_SOCKET=/var/run/docker.sock
+      - DOCKER_ENABLED=true
+      - HOST_ENABLED=true
+      - SCAN_INTERVAL=60000
+      - PROBE_TIMEOUT=3000
+      - PROBE_CONCURRENCY=10
+      - LOG_LEVEL=info
+    restart: unless-stopped
+    # Run as non-root (user 1000 created in Dockerfile)
+    # Note: docker group access needed for socket - see deployment notes
+    # user: "1000:1000"  # Uncomment if docker socket permissions allow
+
+networks:
+  default:
+    name: service-dashboard-network

@@ -15,6 +15,23 @@ A lightweight service discovery dashboard for a RHEL 9 jump server. Automaticall
 
 ## Quick Start
 
+### Option 1: Docker (Recommended)
+
+```bash
+# Build and run with Docker Compose
+docker-compose up -d --build
+```
+
+Open http://localhost:3000
+
+The container includes:
+- Backend API server
+- Pre-built frontend
+- Docker CLI for container discovery
+- All dependencies pre-installed
+
+### Option 2: Manual Development
+
 ### Prerequisites
 
 - Node.js 18+
@@ -165,6 +182,85 @@ sudo setsebool -P httpd_can_network_connect 1
 
 # If using non-standard port
 sudo semanage port -a -t http_port_t -p tcp 3000
+```
+
+## Docker Deployment
+
+### Using Docker Compose (Recommended)
+
+```bash
+# Build and start
+docker-compose up -d --build
+
+# View logs
+docker-compose logs -f
+
+# Stop
+docker-compose down
+```
+
+### Using Docker Directly
+
+```bash
+# Build image
+docker build -t service-dashboard .
+
+# Run container
+docker run -d \
+  --name service-dashboard \
+  -p 3000:3000 \
+  -v /var/run/docker.sock:/var/run/docker.sock:ro \
+  --restart unless-stopped \
+  service-dashboard
+```
+
+### Docker Socket Access
+
+For Docker container discovery to work, the container needs access to the Docker socket. The compose file mounts it read-only:
+
+```yaml
+volumes:
+  - /var/run/docker.sock:/var/run/docker.sock:ro
+```
+
+**Note**: The container runs as user 1001. For Docker socket access, either:
+1. Add the user to the docker group on the host
+2. Use a Docker socket proxy (more secure): https://github.com/Tecnativa/docker-socket-proxy
+3. Run as root (not recommended for production): add `-u 0` to docker run
+
+### Environment Variables
+
+All config.yaml settings can be overridden via environment variables:
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `PORT` | Server port | 3000 |
+| `HOST` | Bind address | 0.0.0.0 |
+| `SCAN_INTERVAL` | Background scan interval (ms) | 60000 |
+| `SCAN_ENABLED` | Enable background scans | true |
+| `PROBE_TIMEOUT` | HTTP probe timeout (ms) | 3000 |
+| `PROBE_CONCURRENCY` | Max concurrent probes | 10 |
+| `PROBE_PATH` | Probe path | / |
+| `PROBE_SCHEME` | Probe scheme (http/https) | http |
+| `PROBE_TLS_REJECT_UNAUTHORIZED` | TLS cert verification | true |
+| `DOCKER_SOCKET` | Docker socket path | (auto) |
+| `DOCKER_ENABLED` | Enable Docker discovery | true |
+| `DOCKER_INCLUDE_STOPPED` | Include stopped containers | true |
+| `HOST_COMMAND` | Host discovery command | lsof |
+| `HOST_ARGS` | Host discovery args (comma-separated) | -iTCP,-sTCP:LISTEN,-P,-n |
+| `HOST_ENABLED` | Enable host discovery | true |
+| `LOG_LEVEL` | Log level | info |
+| `LOG_FORMAT` | Log format (json/text) | json |
+
+Example:
+```bash
+docker run -d \
+  -e SCAN_INTERVAL=30000 \
+  -e PROBE_TIMEOUT=5000 \
+  -e LOG_LEVEL=debug \
+  -p 3000:3000 \
+  -v /var/run/docker.sock:/var/run/docker.sock:ro \
+  service-dashboard
 ```
 
 ## Architecture
