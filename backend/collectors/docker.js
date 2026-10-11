@@ -6,10 +6,34 @@
 import { spawn } from 'child_process';
 import { getConfig } from '../config.js';
 
+/**
+ * Validates Docker socket configuration to prevent argument injection.
+ * Allows only: unix:///path/to/socket or tcp://host:port
+ */
+function validateDockerSocket(socket) {
+  if (!socket || typeof socket !== 'string') {
+    return false;
+  }
+  // Unix socket: unix:///absolute/path (no whitespace, no dashes at start)
+  const unixSocketRegex = /^unix:\/\/\/[a-zA-Z0-9_\-./]+$/;
+  // TCP socket: tcp://host:port (host can be hostname, IP, or localhost)
+  const tcpSocketRegex = /^tcp:\/\/[a-zA-Z0-9_.\-]+:\d+$/;
+  return unixSocketRegex.test(socket) || tcpSocketRegex.test(socket);
+}
+
 function runDockerCommand(args) {
   return new Promise((resolve, reject) => {
     const config = getConfig();
-    const dockerArgs = config.docker.socket ? ['-H', config.docker.socket, ...args] : args;
+    let dockerArgs = args;
+
+    if (config.docker.socket) {
+      if (!validateDockerSocket(config.docker.socket)) {
+        reject(new Error(`Invalid DOCKER_SOCKET format: ${config.docker.socket}. Must be unix:///path or tcp://host:port`));
+        return;
+      }
+      dockerArgs = ['-H', config.docker.socket, ...args];
+    }
+
     const child = spawn('docker', dockerArgs, {
       stdio: ['ignore', 'pipe', 'pipe']
     });

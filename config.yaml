@@ -29,6 +29,8 @@ probe:
 # Docker settings
 docker:
   # Docker socket path (optional, uses default if not set)
+  # Format: unix:///path/to/socket or tcp://host:port
+  # For Docker socket proxy (recommended): tcp://docker-socket-proxy:2375
   socket: ""
   # Enable/disable Docker discovery
   enabled: true

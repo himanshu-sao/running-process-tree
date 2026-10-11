@@ -6,14 +6,12 @@ services:
     container_name: service-dashboard
     ports:
       - "3000:3000"
-    volumes:
-      # Docker socket for container discovery (read-only)
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      # Optional: persist config
-      - ./config.yaml:/app/config.yaml:ro
+    # Use Docker socket proxy for secure, limited Docker API access
+    # No direct docker.sock mount - connects to proxy over TCP
+    # Config is baked into image; override with env vars or mount config.yaml if needed
     environment:
       - NODE_ENV=production
-      - DOCKER_SOCKET=/var/run/docker.sock
+      - DOCKER_SOCKET=tcp://docker-socket-proxy:2375
       - DOCKER_ENABLED=true
       - HOST_ENABLED=true
       - SCAN_INTERVAL=60000
@@ -21,9 +19,68 @@ services:
       - PROBE_CONCURRENCY=10
       - LOG_LEVEL=info
     restart: unless-stopped
-    # Run as non-root (user 1000 created in Dockerfile)
-    # Note: docker group access needed for socket - see deployment notes
-    # user: "1000:1000"  # Uncomment if docker socket permissions allow
+    user: "1001:1001"
+    depends_on:
+      - docker-socket-proxy
+
+  # Read-only Docker socket proxy - exposes only safe API endpoints
+  # Runs as root because HAProxy needs to bind port 2375 and write pidfile
+  # But it's a read-only proxy with explicit deny rules - safer than direct socket mount
+  docker-socket-proxy:
+    image: tecnativa/docker-socket-proxy:latest
+    container_name: docker-socket-proxy
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      # Only allow read-only container listing and inspection
+      - CONTAINERS=1
+      - CONTAINERS_LIST=1
+      - CONTAINERS_INSPECT=1
+      - IMAGES=1
+      - IMAGES_LIST=1
+      - NETWORKS=1
+      - NETWORKS_LIST=1
+      - VOLUMES=1
+      - VOLUMES_LIST=1
+      - INFO=1
+      - VERSION=1
+      # Explicitly deny all mutation operations
+      - CONTAINERS_CREATE=0
+      - CONTAINERS_DELETE=0
+      - CONTAINERS_EXEC=0
+      - CONTAINERS_START=0
+      - CONTAINERS_STOP=0
+      - CONTAINERS_RESTART=0
+      - CONTAINERS_KILL=0
+      - CONTAINERS_PRUNE=0
+      - CONTAINERS_RENAME=0
+      - CONTAINERS_RESIZE=0
+      - CONTAINERS_TOP=0
+      - CONTAINERS_LOGS=0
+      - CONTAINERS_CHANGES=0
+      - CONTAINERS_EXPORT=0
+      - CONTAINERS_STATS=0
+      - CONTAINERS_UPDATE=0
+      - IMAGES_BUILD=0
+      - IMAGES_CREATE=0
+      - IMAGES_DELETE=0
+      - IMAGES_LOAD=0
+      - IMAGES_PULL=0
+      - IMAGES_PUSH=0
+      - IMAGES_TAG=0
+      - NETWORKS_CREATE=0
+      - NETWORKS_DELETE=0
+      - NETWORKS_CONNECT=0
+      - NETWORKS_DISCONNECT=0
+      - VOLUMES_CREATE=0
+      - VOLUMES_DELETE=0
+      - VOLUMES_PRUNE=0
+      # Disable events endpoint to avoid timeout warnings
+      - EVENTS=0
+    restart: unless-stopped
+    # Run as root - HAProxy needs to bind to port 2375 and write pidfile
+    # This is a read-only proxy with explicit deny rules - much safer than direct socket mount
+    # user: "1001:1001"
 
 networks:
   default:

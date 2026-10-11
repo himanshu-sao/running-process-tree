@@ -30,8 +30,8 @@ WORKDIR /app
 COPY --from=backend-builder /app/backend/node_modules ./backend/node_modules
 COPY backend/ ./backend/
 
-# Copy built frontend
-COPY --from=frontend-builder /app/frontend/dist ./backend/public
+# Copy built frontend to where backend expects it (../frontend/dist relative to backend/)
+COPY --from=frontend-builder /app/frontend/dist ./frontend/dist
 
 # Copy config
 COPY config.yaml ./
