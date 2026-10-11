@@ -1,5 +1,7 @@
 # Multi-stage build: frontend -> backend
-FROM node:20-alpine AS frontend-builder
+# Base image pinned to SHA256 digest for supply chain security
+# node@sha256:fb4cd12c85ee03686f6af5362a0b0d56d50c58a04632e6c0fb8363f609372293
+FROM node@sha256:fb4cd12c85ee03686f6af5362a0b0d56d50c58a04632e6c0fb8363f609372293 AS frontend-builder
 
 WORKDIR /app/frontend
 COPY frontend/package*.json ./
@@ -8,14 +10,14 @@ COPY frontend/ ./
 RUN npm run build
 
 
-FROM node:20-alpine AS backend-builder
+FROM node@sha256:fb4cd12c85ee03686f6af5362a0b0d56d50c58a04632e6c0fb8363f609372293 AS backend-builder
 
 WORKDIR /app/backend
 COPY backend/package*.json ./
 RUN npm ci --production
 
 
-FROM node:20-alpine
+FROM node@sha256:fb4cd12c85ee03686f6af5362a0b0d56d50c58a04632e6c0fb8363f609372293
 
 # Install docker-cli for container discovery
 RUN apk add --no-cache docker-cli

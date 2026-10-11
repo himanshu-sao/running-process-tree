@@ -26,8 +26,10 @@ services:
   # Read-only Docker socket proxy - exposes only safe API endpoints
   # Runs as root because HAProxy needs to bind port 2375 and write pidfile
   # But it's a read-only proxy with explicit deny rules - safer than direct socket mount
+  # Pinned to SHA256 digest for supply chain security (immutable reference)
+  # tecnativa/docker-socket-proxy@sha256:1f5038b54f06c3e18422902cf00ba21803d1c97805aae032e5e6673d532d3459
   docker-socket-proxy:
-    image: tecnativa/docker-socket-proxy:latest
+    image: tecnativa/docker-socket-proxy@sha256:1f5038b54f06c3e18422902cf00ba21803d1c97805aae032e5e6673d532d3459
     container_name: docker-socket-proxy
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
